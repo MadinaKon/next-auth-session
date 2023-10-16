@@ -15,9 +15,20 @@ export const authOptions = {
       // },
     }),
     // ...add more providers here
+    // GoogleProvider({
+    //   clientId: process.env.GOOGLE_CLIENT_ID,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    // }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
   ],
   adapter: MongoDBAdapter(clientPromise),
@@ -25,6 +36,12 @@ export const authOptions = {
     async session({ session, user }) {
       session.user.userId = user.id;
       return session;
+    },
+    async signIn({ account, profile }) {
+      if (account.provider === "google") {
+        return profile.email_verified && profile.email.endsWith("@example.com");
+      }
+      return true; // Do different verification for other providers that don't have `email_verified`
     },
   },
 };
